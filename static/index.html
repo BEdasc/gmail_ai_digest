@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veille IA — Gmail Digest</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      background: #312e81;
+      color: white;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; }
+    header span { opacity: .6; font-size: .9rem; }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Form card ───────────────────────────────────────── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: .75rem 1rem;
+    }
+    label { font-size: .875rem; font-weight: 500; color: #475569; white-space: nowrap; }
+
+    .mode-tabs {
+      display: flex;
+      gap: .5rem;
+    }
+    .mode-tab {
+      padding: .4rem .9rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      background: white;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: all .15s;
+      color: #64748b;
+    }
+    .mode-tab.active {
+      background: #312e81;
+      border-color: #312e81;
+      color: white;
+      font-weight: 500;
+    }
+
+    .date-inputs { display: flex; gap: .75rem; flex-wrap: wrap; }
+    input[type="date"] {
+      padding: .4rem .75rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: .9rem;
+      color: #1e293b;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="date"]:focus { border-color: #6366f1; }
+
+    .options-row { display: flex; align-items: center; gap: .75rem; }
+    input[type="number"] {
+      width: 70px;
+      padding: .4rem .5rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: .9rem;
+      text-align: center;
+    }
+    small { color: #94a3b8; font-size: .8rem; }
+
+    .btn-run {
+      margin-top: 1rem;
+      padding: .65rem 1.75rem;
+      background: #312e81;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-run:hover:not(:disabled) { background: #3730a3; }
+    .btn-run:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Loading ─────────────────────────────────────────── */
+    #loading {
+      display: none;
+      align-items: center;
+      gap: .75rem;
+      padding: 1rem 1.5rem;
+      background: #eef2ff;
+      border-radius: 10px;
+      color: #4338ca;
+      font-size: .9rem;
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid #c7d2fe;
+      border-top-color: #4338ca;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ───────────────────────────────────────────── */
+    #error {
+      display: none;
+      padding: 1rem 1.25rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      color: #dc2626;
+      font-size: .9rem;
+    }
+
+    /* ── Digest day section ──────────────────────────────── */
+    .digest-day { display: flex; flex-direction: column; gap: 1rem; }
+
+    .digest-header {
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .digest-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #312e81;
+      margin-bottom: .35rem;
+    }
+    .digest-meta { font-size: .8rem; color: #94a3b8; margin-bottom: 1rem; }
+
+    .top3 { display: flex; flex-direction: column; gap: .4rem; }
+    .top3-item {
+      display: flex;
+      gap: .6rem;
+      font-size: .875rem;
+      line-height: 1.5;
+    }
+    .top3-num {
+      background: #312e81;
+      color: white;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .synthesis {
+      margin-top: .75rem;
+      padding-top: .75rem;
+      border-top: 1px solid #f1f5f9;
+      font-size: .875rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .synthesis strong { color: #1e293b; }
+
+    /* ── Article cards ───────────────────────────────────── */
+    .articles { display: flex; flex-direction: column; gap: .75rem; }
+
+    .article-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      border-left: 3px solid var(--cat-color, #94a3b8);
+    }
+    .article-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: .4rem;
+    }
+    .article-title {
+      font-size: .9rem;
+      font-weight: 600;
+      color: #1e293b;
+      line-height: 1.4;
+    }
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: .5rem;
+    }
+    .badge {
+      padding: .15rem .55rem;
+      border-radius: 99px;
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      background: var(--cat-color, #94a3b8);
+      color: white;
+    }
+    .source { font-size: .78rem; color: #64748b; }
+    .stars { font-size: .82rem; color: #f59e0b; letter-spacing: .05em; }
+
+    .article-resume {
+      font-size: .85rem;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .article-url {
+      display: inline-block;
+      margin-top: .5rem;
+      font-size: .8rem;
+      color: #6366f1;
+      text-decoration: none;
+    }
+    .article-url:hover { text-decoration: underline; }
+
+    /* Category colours */
+    [data-cat="modèles"]      { --cat-color: #6366f1; }
+    [data-cat="outils"]       { --cat-color: #10b981; }
+    [data-cat="recherche"]    { --cat-color: #8b5cf6; }
+    [data-cat="applications"] { --cat-color: #f59e0b; }
+    [data-cat="regulation"]   { --cat-color: #ef4444; }
+    [data-cat="autre"]        { --cat-color: #94a3b8; }
+
+    .no-articles {
+      text-align: center;
+      padding: 2rem;
+      color: #94a3b8;
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Veille IA — Gmail Digest</h1>
+    <span>Résumés quotidiens générés par Claude</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Formulaire ─────────────────────────────────── -->
+  <div class="card">
+    <div class="form-grid">
+
+      <label>Mode</label>
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="yesterday">Hier</button>
+        <button class="mode-tab" data-mode="single">Date unique</button>
+        <button class="mode-tab" data-mode="range">Période</button>
+      </div>
+
+      <label id="date-label" style="display:none">Date</label>
+      <div class="date-inputs" id="date-inputs" style="display:none">
+        <input type="date" id="date-single" />
+        <input type="date" id="date-start" style="display:none" />
+        <span id="range-sep" style="display:none;align-self:center;color:#94a3b8">→</span>
+        <input type="date" id="date-end" style="display:none" />
+      </div>
+
+      <label>Emails max</label>
+      <div class="options-row">
+        <input type="number" id="max-emails" value="50" min="5" max="200" step="5" />
+        <small>par jour</small>
+      </div>
+    </div>
+
+    <button class="btn-run" id="btn-run">Générer le digest</button>
+  </div>
+
+  <!-- ── Feedback ───────────────────────────────────── -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <span id="loading-msg">Connexion à Gmail et analyse en cours…</span>
+  </div>
+
+  <div id="error"></div>
+
+  <!-- ── Résultats ──────────────────────────────────── -->
+  <div id="results"></div>
+
+</main>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let mode = 'yesterday';
+
+  // ── Mode tabs ──────────────────────────────────────────
+  document.querySelectorAll('.mode-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      updateDateInputs();
+    });
+  });
+
+  function updateDateInputs() {
+    const dateLabel  = document.getElementById('date-label');
+    const dateInputs = document.getElementById('date-inputs');
+    const single     = document.getElementById('date-single');
+    const start      = document.getElementById('date-start');
+    const sep        = document.getElementById('range-sep');
+    const end        = document.getElementById('date-end');
+
+    if (mode === 'yesterday') {
+      dateLabel.style.display  = 'none';
+      dateInputs.style.display = 'none';
+      return;
+    }
+    dateLabel.style.display  = '';
+    dateInputs.style.display = '';
+
+    if (mode === 'single') {
+      single.style.display = '';
+      start.style.display  = 'none';
+      sep.style.display    = 'none';
+      end.style.display    = 'none';
+    } else {
+      single.style.display = 'none';
+      start.style.display  = '';
+      sep.style.display    = 'inline';
+      end.style.display    = '';
+    }
+  }
+
+  // ── Set default date values ────────────────────────────
+  function isoDate(d) { return d.toISOString().split('T')[0]; }
+  const today     = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  document.getElementById('date-single').value = isoDate(yesterday);
+  document.getElementById('date-start').value  = isoDate(yesterday);
+  document.getElementById('date-end').value    = isoDate(yesterday);
+
+  // ── Submit ─────────────────────────────────────────────
+  document.getElementById('btn-run').addEventListener('click', runDigest);
+
+  async function runDigest() {
+    const btn = document.getElementById('btn-run');
+    const loading = document.getElementById('loading');
+    const errDiv  = document.getElementById('error');
+    const results = document.getElementById('results');
+
+    // Build request body
+    const body = { max_emails: parseInt(document.getElementById('max-emails').value, 10) };
+    if (mode === 'single') {
+      body.date = document.getElementById('date-single').value;
+    } else if (mode === 'range') {
+      body.start_date = document.getElementById('date-start').value;
+      body.end_date   = document.getElementById('date-end').value;
+    }
+    // mode === 'yesterday' → no date fields, API defaults to yesterday
+
+    // UI: loading state
+    btn.disabled = true;
+    errDiv.style.display = 'none';
+    results.innerHTML = '';
+    loading.style.display = 'flex';
+    document.getElementById('loading-msg').textContent = 'Connexion à Gmail et analyse en cours…';
+
+    try {
+      const resp = await fetch('/api/digest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.detail || `Erreur HTTP ${resp.status}`);
+      }
+
+      const digests = await resp.json();
+      renderDigests(digests);
+    } catch (err) {
+      errDiv.textContent = '❌ ' + err.message;
+      errDiv.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      loading.style.display = 'none';
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────
+  function stars(n) {
+    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  function renderDigests(digests) {
+    const container = document.getElementById('results');
+    container.innerHTML = '';
+
+    digests.forEach(digest => {
+      const section = document.createElement('div');
+      section.className = 'digest-day';
+
+      // Header block
+      const header = document.createElement('div');
+      header.className = 'digest-header';
+      header.innerHTML = `
+        <h2>📰 ${digest.date}</h2>
+        <div class="digest-meta">${digest.nb_emails_analyses} emails analysés · ${digest.nb_articles_retenus} articles retenus</div>
+        <div class="top3">
+          ${digest.top_3_a_retenir.map((t, i) => `
+            <div class="top3-item">
+              <span class="top3-num">${i + 1}</span>
+              <span>${escHtml(t)}</span>
+            </div>`).join('')}
+        </div>
+        <div class="synthesis"><strong>Synthèse :</strong> ${escHtml(digest.synthese_globale)}</div>
+      `;
+      section.appendChild(header);
+
+      // Articles
+      if (digest.articles.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'no-articles';
+        empty.textContent = 'Aucun article retenu pour cette date.';
+        section.appendChild(empty);
+      } else {
+        const articlesDiv = document.createElement('div');
+        articlesDiv.className = 'articles';
+
+        digest.articles.forEach(a => {
+          const cat = (a.categorie || 'autre').toLowerCase();
+          const card = document.createElement('div');
+          card.className = 'article-card';
+          card.dataset.cat = cat;
+          card.innerHTML = `
+            <div class="article-card-head">
+              <div class="article-title">${escHtml(a.titre)}</div>
+            </div>
+            <div class="article-meta">
+              <span class="badge">${escHtml(a.categorie)}</span>
+              <span class="source">${escHtml(a.source)}</span>
+              <span class="stars">${stars(a.pertinence)}</span>
+            </div>
+            <div class="article-resume">${escHtml(a.resume)}</div>
+            ${a.url ? `<a class="article-url" href="${escHtml(a.url)}" target="_blank" rel="noopener">🔗 Lire l'article</a>` : ''}
+          `;
+          articlesDiv.appendChild(card);
+        });
+
+        section.appendChild(articlesDiv);
+      }
+
+      container.appendChild(section);
+    });
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+
+</body>
+</html>
