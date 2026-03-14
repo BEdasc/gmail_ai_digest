@@ -74,12 +74,14 @@ AI_KEYWORDS_QUERY = (
     "machine learning OR deep learning OR neural OR transformer OR "
     "IA OR intelligence artificielle OR modèle de langage OR "
     "ChatGPT OR Gemini OR Mistral OR Llama OR diffusion OR "
-    "generative OR génératif OR veille IA)"
+    "generative OR génératif OR veille IA OR "
+    "hugging face OR huggingface OR open source OR open weight OR openweight)"
 )
 
 # Expéditeurs connus de newsletters IA — capturés inconditionnellement
 KNOWN_SENDERS_QUERY = (
-    "from:(aiforwork OR alphasignal OR neatprompts OR deeplearning.ai)"
+    "from:(aiforwork OR alphasignal OR neatprompts OR deeplearning.ai "
+    "OR learnprompting OR thebatch)"
 )
 
 # Requête combinée : mots-clés OU expéditeurs connus
@@ -117,7 +119,11 @@ class ArticleSummary(BaseModel):
     )
     pertinence: int = Field(
         ge=1, le=5,
-        description="Score de pertinence 1-5 (5 = très pertinent pour un développeur/technicien IA)"
+        description=(
+            "Score de pertinence 1-5 pour un CEO-développeur en veille IA : "
+            "5 = nouveau modèle exploitable, opportunité stratégique ou technique majeure, "
+            "évolution réglementaire impactante ; 1 = information marginale"
+        )
     )
     url: Optional[str] = Field(
         default=None,
@@ -136,12 +142,16 @@ class DailyDigest(BaseModel):
     )
     synthese_globale: str = Field(
         description=(
-            "Synthèse en 3-5 phrases des tendances majeures du jour. "
-            "Focus sur les avancées techniques, pas sur le business."
+            "Synthèse en 5-10 phrases des tendances majeures du jour, "
+            "vue d'un CEO-développeur : nouveaux modèles exploitables, opportunités techniques, "
+            "évolutions réglementaires, et signaux stratégiques du marché IA."
         )
     )
     top_3_a_retenir: list[str] = Field(
-        description="Les 3 informations les plus importantes à retenir aujourd'hui"
+        description=(
+            "Les 3 à 5 informations les plus importantes à retenir aujourd'hui : "
+            "nouveaux modèles à tester, opportunités à saisir, points de vigilance stratégiques."
+        )
     )
 
 
@@ -327,24 +337,31 @@ digest_agent = Agent(
     deps_type=GmailDigestDeps,
     instructions="""\
 Tu es un analyste expert en veille technologique IA. Tu analyses des emails
-de newsletters et d'alertes pour produire un résumé quotidien structuré.
+de newsletters et d'alertes pour produire un résumé quotidien structuré,
+destiné à un CEO-développeur qui dirige une société IA travaillant pour le secteur public.
 
 RÈGLES DE FILTRAGE :
-- INCLURE : nouveaux modèles, benchmarks, frameworks, bibliothèques, API,
-  papers de recherche, avancées techniques, cas d'usage innovants, tutoriels,
-  réglementation IA (AI Act, etc.), outils de développement, agents IA.
-- EXCLURE SYSTÉMATIQUEMENT : levées de fonds, rounds de financement, IPO,
-  acquisitions, rachats, nominations, transferts de personnes, départs,
-  embauches, promotions, vie d'entreprise non technique.
+- INCLURE : nouveaux modèles (toute origine — open-weight, propriétaire, API),
+  benchmarks, frameworks, bibliothèques, API, papers de recherche, avancées techniques,
+  cas d'usage innovants (notamment secteur public), tutoriels, outils de développement,
+  agents IA, réglementation IA (AI Act, RGPD, marchés publics IA, etc.),
+  opportunités marché ou technologiques notables.
+- EXCLURE : levées de fonds, rounds de financement, IPO, acquisitions, rachats,
+  nominations, transferts de personnes, départs, embauches, promotions,
+  actualités RH ou vie d'entreprise sans intérêt technique ou stratégique.
 - En cas de doute, inclure avec un score de pertinence bas (1-2).
 
 CONSIGNES DE RÉSUMÉ :
 - Résumer chaque article en 2-3 phrases techniques et factuelles.
-- Utiliser un vocabulaire technique précis (pas de vulgarisation excessive).
+- Mettre en avant les opportunités exploitables : nouveaux modèles à tester,
+  outils intégrables, évolutions réglementaires à anticiper.
 - Indiquer les URLs si présentes dans le corps de l'email.
 - Trier les articles par pertinence décroissante.
-- La synthèse globale doit dégager les tendances techniques du jour.
-- Les top 3 doivent être des informations actionnables pour un développeur IA.
+- La synthèse globale (5 à 10 phrases) doit dégager les tendances du jour
+  avec une double lecture : technique (que peut-on faire ?) et stratégique
+  (qu'est-ce que cela change sur le marché ?).
+- Les 3 à 5 points à retenir doivent être actionnables : modèle à évaluer,
+  outil à adopter, réglementation à surveiller, opportunité à saisir.
 - Répondre en français.
 """,
     retries=2,
