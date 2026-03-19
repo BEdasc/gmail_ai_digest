@@ -73,9 +73,10 @@ AI_KEYWORDS_QUERY = (
     "(AI OR artificial intelligence OR LLM OR GPT OR Claude OR "
     "machine learning OR deep learning OR neural OR transformer OR "
     "IA OR intelligence artificielle OR modèle de langage OR "
-    "ChatGPT OR Gemini OR Mistral OR Llama OR diffusion OR "
+    "ChatGPT OR Gemini OR Mistral OR Llama OR Nvidia OR diffusion OR "
     "generative OR génératif OR veille IA OR "
-    "hugging face OR huggingface OR open source OR open weight OR openweight)"
+    "hugging face OR huggingface OR open source OR open weight OR openweight OR "
+    "OpenClaw OR agent IA OR AI agent OR agentic)"
 )
 
 # Expéditeurs connus de newsletters IA — capturés inconditionnellement
