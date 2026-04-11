@@ -201,8 +201,9 @@ def authenticate_gmail() -> object:
             )
             creds = flow.run_local_server(port=0)
 
-        # Sauvegarder le token pour les prochaines exécutions
+        # Sauvegarder le token pour les prochaines exécutions (lecture/écriture owner uniquement)
         TOKEN_FILE.write_text(creds.to_json())
+        TOKEN_FILE.chmod(0o600)
 
     return build("gmail", "v1", credentials=creds)
 

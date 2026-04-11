@@ -20,7 +20,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from gmail_ai_digest import generate_digest
 
@@ -41,7 +41,7 @@ class DigestRequest(BaseModel):
     date: Optional[str] = None          # YYYY-MM-DD  → digest d'un seul jour
     start_date: Optional[str] = None    # YYYY-MM-DD  ┐ digest d'une période
     end_date: Optional[str] = None      # YYYY-MM-DD  ┘
-    max_emails: int = 50
+    max_emails: int = Field(default=50, ge=1, le=200)
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ async def get_digest(req: DigestRequest):
         try:
             digest = await generate_digest(target_date=target, max_emails=req.max_emails)
             results.append(digest.model_dump())
-        except Exception as exc:
-            raise HTTPException(status_code=500, detail=str(exc))
+        except Exception:
+            raise HTTPException(status_code=500, detail="Erreur lors de la génération du digest.")
 
     return results
