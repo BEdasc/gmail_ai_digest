@@ -71,11 +71,17 @@ async def get_digest(req: DigestRequest):
 
     # Résoudre la liste de dates à traiter
     if req.date:
-        dates = [datetime.strptime(req.date, "%Y-%m-%d")]
+        try:
+            dates = [datetime.strptime(req.date, "%Y-%m-%d")]
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format de date invalide. Utilisez YYYY-MM-DD.")
 
     elif req.start_date and req.end_date:
-        start = datetime.strptime(req.start_date, "%Y-%m-%d")
-        end = datetime.strptime(req.end_date, "%Y-%m-%d")
+        try:
+            start = datetime.strptime(req.start_date, "%Y-%m-%d")
+            end = datetime.strptime(req.end_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format de date invalide. Utilisez YYYY-MM-DD.")
         if start > end:
             raise HTTPException(status_code=400, detail="start_date doit être avant end_date.")
         if (end - start).days > 6:

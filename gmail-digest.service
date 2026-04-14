@@ -15,6 +15,7 @@ Environment="GMAIL_DIGEST_DIR=/opt/gmail-digest"
 # Clé API Anthropic et autres variables d'environnement (ne pas committer ce fichier)
 EnvironmentFile=/opt/gmail-digest/.env
 
+ExecStartPre=/bin/mkdir -p /opt/gmail-digest/digests
 ExecStart=/opt/gmail-digest/venv/bin/uvicorn web_app:app \
     --host 127.0.0.1 \
     --port 8000 \

@@ -470,7 +470,7 @@
               <span class="stars">${stars(a.pertinence)}</span>
             </div>
             <div class="article-resume">${escHtml(a.resume)}</div>
-            ${a.url ? `<a class="article-url" href="${escHtml(a.url)}" target="_blank" rel="noopener">🔗 Lire l'article</a>` : ''}
+            ${safeUrl(a.url) ? `<a class="article-url" href="${escHtml(safeUrl(a.url))}" target="_blank" rel="noopener noreferrer">🔗 Lire l'article</a>` : ''}
           `;
           articlesDiv.appendChild(card);
         });
@@ -488,6 +488,17 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  // Valide qu'une URL est http(s) avant de l'utiliser dans un href
+  // — protège contre les URLs javascript: générées par le LLM
+  function safeUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? url : null;
+    } catch {
+      return null;
+    }
   }
 </script>
 
