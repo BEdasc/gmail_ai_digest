@@ -48,6 +48,7 @@ from pydantic_ai import Agent, RunContext
 # ---------------------------------------------------------------------------
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 # ---------------------------------------------------------------------------
@@ -187,13 +188,19 @@ def _load_and_refresh_credentials() -> Credentials:
                     "Téléchargez-le depuis Google Cloud Console "
                     "(API & Services > Identifiants > OAuth 2.0)."
                 )
-            raise RuntimeError(
-                "Authentification OAuth requise mais impossible en mode headless.\n"
-                "Sur votre machine locale : supprimez token.json, relancez le script\n"
-                "pour ré-autoriser via le navigateur, puis copiez le token sur le VPS :\n"
-                f"  scp token.json user@vps:{APP_DIR}/token.json\n"
-                f"  ssh user@vps chmod 600 {APP_DIR}/token.json"
+            if os.environ.get("GMAIL_DIGEST_HEADLESS", "").lower() == "true":
+                raise RuntimeError(
+                    "Authentification OAuth requise mais impossible en mode headless.\n"
+                    "Sur votre machine locale : supprimez token.json, relancez le script\n"
+                    "pour ré-autoriser via le navigateur, puis copiez le token sur le VPS :\n"
+                    f"  scp token.json user@vps:{APP_DIR}/token.json\n"
+                    f"  ssh user@vps chmod 600 {APP_DIR}/token.json"
+                )
+            # Mode local : ouvre le navigateur pour l'autorisation OAuth
+            flow = InstalledAppFlow.from_client_secrets_file(
+                str(CREDENTIALS_FILE), GMAIL_SCOPES
             )
+            creds = flow.run_local_server(port=0)
 
         TOKEN_FILE.write_text(creds.to_json())
         TOKEN_FILE.chmod(0o600)

@@ -11,6 +11,7 @@ WorkingDirectory=/opt/gmail-digest
 
 # Répertoire de base pour credentials.json, token.json, digests/
 Environment="GMAIL_DIGEST_DIR=/opt/gmail-digest"
+Environment="GMAIL_DIGEST_HEADLESS=true"
 
 # Clé API Anthropic et autres variables d'environnement (ne pas committer ce fichier)
 EnvironmentFile=/opt/gmail-digest/.env
