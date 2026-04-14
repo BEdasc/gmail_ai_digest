@@ -30,17 +30,15 @@ from __future__ import annotations
 
 import asyncio
 import base64
-
-from dotenv import load_dotenv
-load_dotenv()
-import json
 import os
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
@@ -60,9 +58,12 @@ from googleapiclient.discovery import build
 # Portées OAuth Gmail (lecture seule)
 GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
+# Répertoire de base — configurable via GMAIL_DIGEST_DIR pour les déploiements VPS/systemd
+APP_DIR = Path(os.environ.get("GMAIL_DIGEST_DIR", Path(__file__).parent))
+
 # Chemin vers les fichiers d'authentification
-CREDENTIALS_FILE = Path("credentials.json")
-TOKEN_FILE = Path("token.json")
+CREDENTIALS_FILE = APP_DIR / "credentials.json"
+TOKEN_FILE = APP_DIR / "token.json"
 
 # Nombre maximum d'emails à récupérer par exécution
 MAX_EMAILS = 50
@@ -87,13 +88,6 @@ KNOWN_SENDERS_QUERY = (
 
 # Requête combinée : mots-clés OU expéditeurs connus
 GMAIL_QUERY = f"({AI_KEYWORDS_QUERY} OR {KNOWN_SENDERS_QUERY})"
-
-# Sujets à exclure du résumé (détectés par l'agent)
-EXCLUDED_TOPICS = [
-    "levée de fonds", "fundraising", "funding round", "series A", "series B",
-    "IPO", "acquisition", "rachat", "merger", "takeover",
-    "nomination", "transfert", "hire", "appointed", "rejoint", "quitte",
-]
 
 
 # ---------------------------------------------------------------------------
@@ -173,19 +167,17 @@ class GmailDigestDeps:
 # Authentification Gmail
 # ---------------------------------------------------------------------------
 
-def authenticate_gmail() -> object:
-    """Authentification OAuth2 et construction du service Gmail.
+def _load_and_refresh_credentials() -> Credentials:
+    """Charge et rafraîchit les credentials OAuth2 de manière synchrone.
 
-    Returns:
-        Service Gmail API prêt à l'emploi.
+    Conçu pour être appelé via asyncio.to_thread() afin de ne pas bloquer
+    l'event loop lors du refresh réseau.
     """
     creds: Optional[Credentials] = None
 
-    # Charger le token existant
     if TOKEN_FILE.exists():
         creds = Credentials.from_authorized_user_file(str(TOKEN_FILE), GMAIL_SCOPES)
 
-    # Rafraîchir ou lancer le flux OAuth
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -196,15 +188,35 @@ def authenticate_gmail() -> object:
                     "Téléchargez-le depuis Google Cloud Console "
                     "(API & Services > Identifiants > OAuth 2.0)."
                 )
+            if os.environ.get("GMAIL_DIGEST_HEADLESS", "").lower() == "true":
+                raise RuntimeError(
+                    "Authentification OAuth requise mais impossible en mode headless.\n"
+                    "Sur votre machine locale : supprimez token.json, relancez le script\n"
+                    "pour ré-autoriser via le navigateur, puis copiez le token sur le VPS :\n"
+                    f"  scp token.json user@vps:{APP_DIR}/token.json\n"
+                    f"  ssh user@vps chmod 600 {APP_DIR}/token.json"
+                )
+            # Mode local : ouvre le navigateur pour l'autorisation OAuth
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(CREDENTIALS_FILE), GMAIL_SCOPES
             )
             creds = flow.run_local_server(port=0)
 
-        # Sauvegarder le token pour les prochaines exécutions (lecture/écriture owner uniquement)
         TOKEN_FILE.write_text(creds.to_json())
         TOKEN_FILE.chmod(0o600)
 
+    return creds
+
+
+async def authenticate_gmail() -> object:
+    """Authentification OAuth2 et construction du service Gmail (async-safe).
+
+    Le refresh réseau est exécuté dans un thread pour ne pas bloquer l'event loop.
+
+    Returns:
+        Service Gmail API prêt à l'emploi.
+    """
+    creds = await asyncio.to_thread(_load_and_refresh_credentials)
     return build("gmail", "v1", credentials=creds)
 
 
@@ -228,7 +240,7 @@ def fetch_ai_emails(
         Liste de dictionnaires {subject, from, date, body_snippet}.
     """
     # Construire la requête Gmail (after/before en epoch)
-    date_start = target_date.replace(hour=0, minute=0, second=0)
+    date_start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
     date_end = date_start + timedelta(days=1)
 
     query = (
@@ -423,7 +435,7 @@ async def generate_digest(
 
     # Authentification Gmail
     print(f"🔐 Connexion à Gmail...")
-    gmail_service = authenticate_gmail()
+    gmail_service = await authenticate_gmail()
 
     # Injection des dépendances
     deps = GmailDigestDeps(
@@ -477,7 +489,7 @@ def print_digest(digest: DailyDigest) -> None:
     print("\n" + "=" * 70)
 
 
-def save_digest_json(digest: DailyDigest, output_dir: Path = Path("digests")) -> Path:
+def save_digest_json(digest: DailyDigest, output_dir: Path = None) -> Path:
     """Sauvegarde le résumé en JSON pour archivage.
 
     Args:
@@ -487,6 +499,8 @@ def save_digest_json(digest: DailyDigest, output_dir: Path = Path("digests")) ->
     Returns:
         Chemin du fichier JSON créé.
     """
+    if output_dir is None:
+        output_dir = APP_DIR / "digests"
     output_dir.mkdir(exist_ok=True)
     filepath = output_dir / f"digest_{digest.date}.json"
     filepath.write_text(
