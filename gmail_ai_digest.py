@@ -60,9 +60,12 @@ from googleapiclient.discovery import build
 # Portées OAuth Gmail (lecture seule)
 GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
+# Répertoire de base — configurable via GMAIL_DIGEST_DIR pour les déploiements VPS/systemd
+APP_DIR = Path(os.environ.get("GMAIL_DIGEST_DIR", Path(__file__).parent))
+
 # Chemin vers les fichiers d'authentification
-CREDENTIALS_FILE = Path("credentials.json")
-TOKEN_FILE = Path("token.json")
+CREDENTIALS_FILE = APP_DIR / "credentials.json"
+TOKEN_FILE = APP_DIR / "token.json"
 
 # Nombre maximum d'emails à récupérer par exécution
 MAX_EMAILS = 50
@@ -196,10 +199,13 @@ def authenticate_gmail() -> object:
                     "Téléchargez-le depuis Google Cloud Console "
                     "(API & Services > Identifiants > OAuth 2.0)."
                 )
-            flow = InstalledAppFlow.from_client_secrets_file(
-                str(CREDENTIALS_FILE), GMAIL_SCOPES
+            raise RuntimeError(
+                "Authentification OAuth requise mais impossible en mode headless.\n"
+                "Sur votre machine locale : supprimez token.json, relancez le script\n"
+                "pour ré-autoriser via le navigateur, puis copiez le token sur le VPS :\n"
+                f"  scp token.json user@vps:{APP_DIR}/token.json\n"
+                f"  ssh user@vps chmod 600 {APP_DIR}/token.json"
             )
-            creds = flow.run_local_server(port=0)
 
         # Sauvegarder le token pour les prochaines exécutions (lecture/écriture owner uniquement)
         TOKEN_FILE.write_text(creds.to_json())
@@ -477,7 +483,7 @@ def print_digest(digest: DailyDigest) -> None:
     print("\n" + "=" * 70)
 
 
-def save_digest_json(digest: DailyDigest, output_dir: Path = Path("digests")) -> Path:
+def save_digest_json(digest: DailyDigest, output_dir: Path = None) -> Path:
     """Sauvegarde le résumé en JSON pour archivage.
 
     Args:
@@ -487,6 +493,8 @@ def save_digest_json(digest: DailyDigest, output_dir: Path = Path("digests")) ->
     Returns:
         Chemin du fichier JSON créé.
     """
+    if output_dir is None:
+        output_dir = APP_DIR / "digests"
     output_dir.mkdir(exist_ok=True)
     filepath = output_dir / f"digest_{digest.date}.json"
     filepath.write_text(

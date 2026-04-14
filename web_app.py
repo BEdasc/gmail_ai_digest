@@ -2,14 +2,16 @@
 Interface web pour l'agent de veille IA Gmail
 ==============================================
 
-Lance le serveur :
+Développement local :
     uvicorn web_app:app --reload
 
-Puis ouvrir : http://localhost:8000
+VPS (via systemd, voir gmail-digest.service) :
+    uvicorn web_app:app --host 127.0.0.1 --port 8000 --workers 1
 """
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -24,13 +26,28 @@ from pydantic import BaseModel, Field
 
 from gmail_ai_digest import generate_digest
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s — %(message)s",
+)
+logger = logging.getLogger("gmail_digest.web")
+
+# Chemins absolus — stables quel que soit le working directory (important sous systemd)
+_BASE = Path(__file__).parent
+STATIC_DIR = _BASE / "static"
+
 app = FastAPI(title="Gmail AI Digest")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.get("/")
 async def index():
-    return FileResponse("static/index.html")
+    return FileResponse(str(STATIC_DIR / "index.html"))
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 
 # ---------------------------------------------------------------------------
@@ -77,6 +94,7 @@ async def get_digest(req: DigestRequest):
             digest = await generate_digest(target_date=target, max_emails=req.max_emails)
             results.append(digest.model_dump())
         except Exception:
+            logger.exception("Erreur génération digest pour %s", target.date())
             raise HTTPException(status_code=500, detail="Erreur lors de la génération du digest.")
 
     return results

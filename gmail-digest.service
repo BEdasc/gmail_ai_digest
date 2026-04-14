@@ -1,0 +1,36 @@
+[Unit]
+Description=Gmail AI Digest — FastAPI web server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=gmail-digest
+Group=gmail-digest
+WorkingDirectory=/opt/gmail-digest
+
+# Répertoire de base pour credentials.json, token.json, digests/
+Environment="GMAIL_DIGEST_DIR=/opt/gmail-digest"
+
+# Clé API Anthropic et autres variables d'environnement (ne pas committer ce fichier)
+EnvironmentFile=/opt/gmail-digest/.env
+
+ExecStart=/opt/gmail-digest/venv/bin/uvicorn web_app:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 1 \
+    --no-access-log
+
+# Redémarrage automatique en cas d'erreur
+Restart=on-failure
+RestartSec=5
+
+# Durcissement de la sandbox systemd
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/gmail-digest/digests /opt/gmail-digest/token.json
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
