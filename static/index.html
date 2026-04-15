@@ -4,133 +4,316 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veille IA — Gmail Digest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ── Reset & tokens ──────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --brand-950: #1e1b4b;
+      --brand-800: #312e81;
+      --brand-700: #3730a3;
+      --brand-600: #4f46e5;
+      --brand-500: #6366f1;
+      --brand-100: #e0e7ff;
+      --brand-50:  #eef2ff;
+
+      --slate-900: #0f172a;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+
+      --green:   #10b981;
+      --purple:  #8b5cf6;
+      --amber:   #f59e0b;
+      --red:     #ef4444;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.09), 0 2px 4px rgba(0,0,0,.05);
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f1f5f9;
-      color: #1e293b;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--slate-50);
+      color: var(--slate-900);
       min-height: 100vh;
+      line-height: 1.5;
     }
 
     /* ── Header ─────────────────────────────────────────── */
     header {
-      background: #312e81;
+      background: linear-gradient(135deg, var(--brand-950) 0%, var(--brand-800) 100%);
       color: white;
-      padding: 1.25rem 2rem;
+      padding: 1rem 2rem;
       display: flex;
       align-items: center;
       gap: .75rem;
+      box-shadow: 0 2px 12px rgba(30,27,75,.35);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; }
-    header span { opacity: .6; font-size: .9rem; }
+    .header-icon {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,.12);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
+    header .subtitle { font-size: .75rem; opacity: .6; margin-top: 1px; }
 
-    /* ── Layout ──────────────────────────────────────────── */
-    main {
-      max-width: 860px;
-      margin: 2rem auto;
-      padding: 0 1rem;
+    /* ── Layout 2 colonnes ───────────────────────────────── */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 1.5rem;
+      max-width: 1280px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      align-items: start;
+    }
+    .app-sidebar {
+      position: sticky;
+      top: calc(56px + 1.5rem);
+      max-height: calc(100vh - 56px - 3rem);
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--slate-300) transparent;
     }
+    .app-content { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
 
-    /* ── Form card ───────────────────────────────────────── */
+    /* ── Cards ───────────────────────────────────────────── */
     .card {
       background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--slate-200);
     }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      align-items: center;
-      gap: .75rem 1rem;
+    /* ── Formulaire ──────────────────────────────────────── */
+    .form-section { display: flex; flex-direction: column; gap: .85rem; }
+
+    .field-label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .4rem;
+      display: block;
     }
-    label { font-size: .875rem; font-weight: 500; color: #475569; white-space: nowrap; }
 
     .mode-tabs {
       display: flex;
-      gap: .5rem;
+      gap: .35rem;
+      background: var(--slate-100);
+      padding: 3px;
+      border-radius: var(--radius-md);
     }
     .mode-tab {
-      padding: .4rem .9rem;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 6px;
-      background: white;
-      font-size: .85rem;
-      cursor: pointer;
-      transition: all .15s;
-      color: #64748b;
-    }
-    .mode-tab.active {
-      background: #312e81;
-      border-color: #312e81;
-      color: white;
-      font-weight: 500;
-    }
-
-    .date-inputs { display: flex; gap: .75rem; flex-wrap: wrap; }
-    input[type="date"] {
-      padding: .4rem .75rem;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: .9rem;
-      color: #1e293b;
-      outline: none;
-      transition: border-color .15s;
-    }
-    input[type="date"]:focus { border-color: #6366f1; }
-
-    .options-row { display: flex; align-items: center; gap: .75rem; }
-    input[type="number"] {
-      width: 70px;
+      flex: 1;
       padding: .4rem .5rem;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: .9rem;
+      border: none;
+      border-radius: calc(var(--radius-md) - 3px);
+      background: transparent;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--slate-500);
+      transition: all .18s;
       text-align: center;
     }
-    small { color: #94a3b8; font-size: .8rem; }
+    .mode-tab.active {
+      background: white;
+      color: var(--brand-800);
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .date-inputs { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    input[type="date"], input[type="number"] {
+      padding: .5rem .7rem;
+      border: 1.5px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: .875rem;
+      color: var(--slate-900);
+      background: white;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input[type="date"]:focus, input[type="number"]:focus {
+      border-color: var(--brand-500);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+    }
+    input[type="number"] { width: 72px; text-align: center; }
+    .range-sep { color: var(--slate-400); font-size: .85rem; }
+
+    .max-emails-row { display: flex; align-items: center; gap: .6rem; }
+    .max-emails-hint { font-size: .75rem; color: var(--slate-400); }
 
     .btn-run {
-      margin-top: 1rem;
-      padding: .65rem 1.75rem;
-      background: #312e81;
+      width: 100%;
+      padding: .65rem 1rem;
+      background: linear-gradient(135deg, var(--brand-700), var(--brand-600));
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: .95rem;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: .9rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background .15s;
+      transition: box-shadow .18s, transform .1s;
+      letter-spacing: -.01em;
     }
-    .btn-run:hover:not(:disabled) { background: #3730a3; }
+    .btn-run:hover:not(:disabled) {
+      box-shadow: 0 4px 14px rgba(79,70,229,.4);
+      transform: translateY(-1px);
+    }
+    .btn-run:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
     .btn-run:disabled { opacity: .5; cursor: not-allowed; }
 
+    /* ── Historique ──────────────────────────────────────── */
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: .75rem;
+    }
+    .history-title {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .history-count { font-size: .75rem; color: var(--slate-400); }
+    .history-chips { display: flex; flex-direction: column; gap: .3rem; }
+    .history-chip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .5rem .75rem;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--slate-200);
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: .82rem;
+      color: var(--slate-700);
+      transition: all .15s;
+      text-align: left;
+    }
+    .history-chip:hover { border-color: var(--brand-500); color: var(--brand-600); background: var(--brand-50); }
+    .history-chip.active {
+      background: var(--brand-50);
+      border-color: var(--brand-500);
+      color: var(--brand-800);
+      font-weight: 600;
+    }
+    .history-chip-meta { font-size: .72rem; color: var(--slate-400); }
+    .history-chip.active .history-chip-meta { color: var(--brand-500); }
+
+    /* ── Digest summary (sidebar) ────────────────────────── */
+    #digest-summary { display: none; }
+    .summary-date {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--brand-800);
+      margin-bottom: .25rem;
+    }
+    .summary-meta { font-size: .75rem; color: var(--slate-400); margin-bottom: 1rem; }
+
+    .top-items { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+    .top-item {
+      display: flex;
+      gap: .6rem;
+      font-size: .82rem;
+      line-height: 1.5;
+      color: var(--slate-700);
+    }
+    .top-num {
+      background: var(--brand-800);
+      color: white;
+      border-radius: 50%;
+      width: 18px; height: 18px;
+      min-width: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .synthesis-label {
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--slate-400);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: .35rem;
+    }
+    .synthesis-text {
+      font-size: .82rem;
+      color: var(--slate-600);
+      line-height: 1.65;
+    }
+
     /* ── Loading ─────────────────────────────────────────── */
-    #loading {
-      display: none;
+    #loading { display: none; }
+    .loading-block {
+      padding: 1.25rem 1.5rem;
+      background: var(--brand-50);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--brand-100);
+    }
+    .loading-top {
+      display: flex;
       align-items: center;
       gap: .75rem;
-      padding: 1rem 1.5rem;
-      background: #eef2ff;
-      border-radius: 10px;
-      color: #4338ca;
-      font-size: .9rem;
+      color: var(--brand-600);
+      font-size: .875rem;
+      font-weight: 500;
+      margin-bottom: .9rem;
     }
     .spinner {
-      width: 20px; height: 20px;
-      border: 2.5px solid #c7d2fe;
-      border-top-color: #4338ca;
+      width: 18px; height: 18px;
+      border: 2.5px solid var(--brand-100);
+      border-top-color: var(--brand-600);
       border-radius: 50%;
       animation: spin .7s linear infinite;
       flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-bar-track {
+      height: 4px;
+      background: var(--brand-100);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .loading-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--brand-600), var(--brand-500));
+      border-radius: 99px;
+      transition: width .8s ease;
+    }
 
     /* ── Error ───────────────────────────────────────────── */
     #error {
@@ -138,79 +321,55 @@
       padding: 1rem 1.25rem;
       background: #fef2f2;
       border: 1px solid #fecaca;
-      border-radius: 10px;
+      border-radius: var(--radius-lg);
       color: #dc2626;
-      font-size: .9rem;
+      font-size: .875rem;
     }
 
-    /* ── Digest day section ──────────────────────────────── */
-    .digest-day { display: flex; flex-direction: column; gap: 1rem; }
-
-    .digest-header {
+    /* ── Filtres catégories ──────────────────────────────── */
+    #category-filters { display: none; }
+    .filter-bar { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .filter-pill {
+      padding: .3rem .85rem;
+      border-radius: 99px;
+      border: 1.5px solid var(--slate-200);
       background: white;
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      font-family: inherit;
+      font-size: .78rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--slate-500);
+      transition: all .15s;
     }
-    .digest-header h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #312e81;
-      margin-bottom: .35rem;
-    }
-    .digest-meta { font-size: .8rem; color: #94a3b8; margin-bottom: 1rem; }
-
-    .top3 { display: flex; flex-direction: column; gap: .4rem; }
-    .top3-item {
-      display: flex;
-      gap: .6rem;
-      font-size: .875rem;
-      line-height: 1.5;
-    }
-    .top3-num {
-      background: #312e81;
+    .filter-pill:hover { border-color: var(--slate-400); color: var(--slate-700); }
+    .filter-pill.active {
+      background: var(--brand-800);
+      border-color: var(--brand-800);
       color: white;
-      border-radius: 50%;
-      width: 20px; height: 20px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .7rem;
-      font-weight: 700;
-      flex-shrink: 0;
-      margin-top: 2px;
     }
 
-    .synthesis {
-      margin-top: .75rem;
-      padding-top: .75rem;
-      border-top: 1px solid #f1f5f9;
-      font-size: .875rem;
-      color: #475569;
-      line-height: 1.6;
-    }
-    .synthesis strong { color: #1e293b; }
-
-    /* ── Article cards ───────────────────────────────────── */
-    .articles { display: flex; flex-direction: column; gap: .75rem; }
+    /* ── Articles ────────────────────────────────────────── */
+    #articles-list { display: flex; flex-direction: column; gap: .75rem; }
 
     .article-card {
       background: white;
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
-      border-left: 3px solid var(--cat-color, #94a3b8);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.1rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--slate-200);
+      border-left: 3px solid var(--cat-color, var(--slate-300));
+      transition: box-shadow .18s, transform .15s;
     }
-    .article-card-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: .75rem;
-      margin-bottom: .4rem;
+    .article-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
     }
     .article-title {
-      font-size: .9rem;
+      font-size: .875rem;
       font-weight: 600;
-      color: #1e293b;
+      color: var(--slate-900);
       line-height: 1.4;
+      margin-bottom: .5rem;
     }
     .article-meta {
       display: flex;
@@ -222,102 +381,189 @@
     .badge {
       padding: .15rem .55rem;
       border-radius: 99px;
-      font-size: .72rem;
+      font-size: .7rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .03em;
-      background: var(--cat-color, #94a3b8);
+      letter-spacing: .04em;
+      background: var(--cat-color, var(--slate-400));
       color: white;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
     }
-    .source { font-size: .78rem; color: #64748b; }
-    .stars { font-size: .82rem; color: #f59e0b; letter-spacing: .05em; }
-
+    .source { font-size: .75rem; color: var(--slate-400); }
+    .stars { font-size: .8rem; color: var(--amber); letter-spacing: .04em; }
     .article-resume {
-      font-size: .85rem;
-      color: #475569;
-      line-height: 1.6;
+      font-size: .825rem;
+      color: var(--slate-600);
+      line-height: 1.65;
     }
     .article-url {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
       margin-top: .5rem;
-      font-size: .8rem;
-      color: #6366f1;
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--brand-500);
       text-decoration: none;
+      transition: color .15s;
     }
-    .article-url:hover { text-decoration: underline; }
+    .article-url:hover { color: var(--brand-700); text-decoration: underline; }
 
     /* Category colours */
-    [data-cat="modèles"]      { --cat-color: #6366f1; }
-    [data-cat="outils"]       { --cat-color: #10b981; }
-    [data-cat="recherche"]    { --cat-color: #8b5cf6; }
-    [data-cat="applications"] { --cat-color: #f59e0b; }
-    [data-cat="regulation"]   { --cat-color: #ef4444; }
-    [data-cat="autre"]        { --cat-color: #94a3b8; }
+    [data-cat="modèles"]      { --cat-color: var(--brand-500); }
+    [data-cat="outils"]       { --cat-color: var(--green); }
+    [data-cat="recherche"]    { --cat-color: var(--purple); }
+    [data-cat="applications"] { --cat-color: var(--amber); }
+    [data-cat="regulation"]   { --cat-color: var(--red); }
+    [data-cat="autre"]        { --cat-color: var(--slate-400); }
 
     .no-articles {
       text-align: center;
-      padding: 2rem;
-      color: #94a3b8;
-      font-size: .9rem;
+      padding: 2.5rem 1rem;
+      color: var(--slate-400);
+      font-size: .875rem;
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--slate-200);
+    }
+
+    /* Fade-in animation des résultats */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .article-card { animation: fadeUp .25s ease both; }
+    .article-card:nth-child(1) { animation-delay: .03s; }
+    .article-card:nth-child(2) { animation-delay: .06s; }
+    .article-card:nth-child(3) { animation-delay: .09s; }
+    .article-card:nth-child(4) { animation-delay: .12s; }
+    .article-card:nth-child(5) { animation-delay: .15s; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+        max-width: 680px;
+      }
+      .app-sidebar {
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+      }
+    }
+    @media (max-width: 640px) {
+      .app-layout { padding: 0 .75rem; margin: .75rem auto; gap: .75rem; }
+      header { padding: .9rem 1rem; }
+      .card { padding: 1rem; }
+      .mode-tabs { gap: .25rem; }
+      .mode-tab { font-size: .75rem; padding: .35rem .4rem; }
     }
   </style>
 </head>
 <body>
 
 <header>
+  <div class="header-icon">📰</div>
   <div>
     <h1>Veille IA — Gmail Digest</h1>
-    <span>Veille stratégique &amp; technique — générée par Claude</span>
+    <div class="subtitle">Veille stratégique &amp; technique — générée par Claude</div>
   </div>
 </header>
 
-<main>
+<main class="app-layout">
 
-  <!-- ── Formulaire ─────────────────────────────────── -->
-  <div class="card">
-    <div class="form-grid">
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="app-sidebar">
 
-      <label>Mode</label>
-      <div class="mode-tabs">
-        <button class="mode-tab active" data-mode="yesterday">Hier</button>
-        <button class="mode-tab" data-mode="single">Date unique</button>
-        <button class="mode-tab" data-mode="range">Période</button>
-      </div>
+    <!-- Formulaire -->
+    <div class="card">
+      <div class="form-section">
 
-      <label id="date-label" style="display:none">Date</label>
-      <div class="date-inputs" id="date-inputs" style="display:none">
-        <input type="date" id="date-single" />
-        <input type="date" id="date-start" style="display:none" />
-        <span id="range-sep" style="display:none;align-self:center;color:#94a3b8">→</span>
-        <input type="date" id="date-end" style="display:none" />
-      </div>
+        <div>
+          <label class="field-label">Période</label>
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="yesterday">Hier</button>
+            <button class="mode-tab" data-mode="single">Date</button>
+            <button class="mode-tab" data-mode="range">Période</button>
+          </div>
+        </div>
 
-      <label>Emails max</label>
-      <div class="options-row">
-        <input type="number" id="max-emails" value="50" min="5" max="200" step="5" />
-        <small>par jour</small>
+        <div id="date-field" style="display:none">
+          <label class="field-label" id="date-label">Date</label>
+          <div class="date-inputs">
+            <input type="date" id="date-single" />
+            <input type="date" id="date-start" style="display:none" />
+            <span class="range-sep" id="range-sep" style="display:none">→</span>
+            <input type="date" id="date-end" style="display:none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label">Emails max</label>
+          <div class="max-emails-row">
+            <input type="number" id="max-emails" value="50" min="5" max="200" step="5" />
+            <span class="max-emails-hint">par jour</span>
+          </div>
+        </div>
+
+        <button class="btn-run" id="btn-run">Générer le digest</button>
+
       </div>
     </div>
 
-    <button class="btn-run" id="btn-run">Générer le digest</button>
-  </div>
+    <!-- Historique -->
+    <div class="card" id="history-panel" style="display:none">
+      <div class="history-header">
+        <span class="history-title">Historique</span>
+        <span class="history-count" id="history-count"></span>
+      </div>
+      <div class="history-chips" id="history-chips"></div>
+    </div>
 
-  <!-- ── Feedback ───────────────────────────────────── -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <span id="loading-msg">Connexion à Gmail et analyse en cours…</span>
-  </div>
+    <!-- Résumé du digest courant -->
+    <div class="card" id="digest-summary">
+      <div class="summary-date" id="summary-date"></div>
+      <div class="summary-meta" id="summary-meta"></div>
+      <div class="top-items" id="summary-top"></div>
+      <div class="synthesis-label">Synthèse</div>
+      <div class="synthesis-text" id="summary-synthesis"></div>
+    </div>
 
-  <div id="error"></div>
+  </aside>
 
-  <!-- ── Résultats ──────────────────────────────────── -->
-  <div id="results"></div>
+  <!-- ── Contenu principal ───────────────────────────────── -->
+  <section class="app-content">
+
+    <!-- Loading -->
+    <div id="loading" class="loading-block">
+      <div class="loading-top">
+        <div class="spinner"></div>
+        <span id="loading-msg">Connexion à Gmail…</span>
+      </div>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loading-progress"></div>
+      </div>
+    </div>
+
+    <!-- Erreur -->
+    <div id="error"></div>
+
+    <!-- Filtres catégories -->
+    <div id="category-filters">
+      <div class="filter-bar" id="filter-bar"></div>
+    </div>
+
+    <!-- Articles -->
+    <div id="articles-list"></div>
+
+  </section>
 
 </main>
 
 <script>
-  // ── State ──────────────────────────────────────────────
+  // ── État global ────────────────────────────────────────
   let mode = 'yesterday';
+  let loadingTimers = [];
 
   // ── Mode tabs ──────────────────────────────────────────
   document.querySelectorAll('.mode-tab').forEach(btn => {
@@ -330,67 +576,103 @@
   });
 
   function updateDateInputs() {
-    const dateLabel  = document.getElementById('date-label');
-    const dateInputs = document.getElementById('date-inputs');
-    const single     = document.getElementById('date-single');
-    const start      = document.getElementById('date-start');
-    const sep        = document.getElementById('range-sep');
-    const end        = document.getElementById('date-end');
+    const dateField = document.getElementById('date-field');
+    const single = document.getElementById('date-single');
+    const start  = document.getElementById('date-start');
+    const sep    = document.getElementById('range-sep');
+    const end    = document.getElementById('date-end');
 
     if (mode === 'yesterday') {
-      dateLabel.style.display  = 'none';
-      dateInputs.style.display = 'none';
+      dateField.style.display = 'none';
       return;
     }
-    dateLabel.style.display  = '';
-    dateInputs.style.display = '';
-
+    dateField.style.display = '';
     if (mode === 'single') {
-      single.style.display = '';
-      start.style.display  = 'none';
-      sep.style.display    = 'none';
-      end.style.display    = 'none';
+      single.style.display = ''; start.style.display = 'none';
+      sep.style.display = 'none'; end.style.display = 'none';
     } else {
-      single.style.display = 'none';
-      start.style.display  = '';
-      sep.style.display    = 'inline';
-      end.style.display    = '';
+      single.style.display = 'none'; start.style.display = '';
+      sep.style.display = 'inline'; end.style.display = '';
     }
   }
 
-  // ── Set default date values ────────────────────────────
+  // ── Valeurs par défaut des dates ───────────────────────
   function isoDate(d) { return d.toISOString().split('T')[0]; }
   const today     = new Date();
-  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
   document.getElementById('date-single').value = isoDate(yesterday);
   document.getElementById('date-start').value  = isoDate(yesterday);
   document.getElementById('date-end').value    = isoDate(yesterday);
 
-  // ── Submit ─────────────────────────────────────────────
+  // ── Loading progressif ─────────────────────────────────
+  const LOADING_STEPS = [
+    [0,     "Connexion à Gmail…"],
+    [3000,  "Récupération des emails IA…"],
+    [8000,  "Filtrage des newsletters…"],
+    [15000, "Analyse par Claude en cours…"],
+    [30000, "Claude rédige résumés et synthèse…"],
+    [55000, "Finalisation du digest…"],
+  ];
+
+  function startLoadingMessages() {
+    const msg      = document.getElementById('loading-msg');
+    const progress = document.getElementById('loading-progress');
+    loadingTimers.forEach(clearTimeout);
+    loadingTimers = [];
+
+    LOADING_STEPS.forEach(([delay, text], i) => {
+      const t = setTimeout(() => {
+        msg.textContent = text;
+        const pct = Math.round((i / (LOADING_STEPS.length - 1)) * 85);
+        progress.style.width = pct + '%';
+      }, delay);
+      loadingTimers.push(t);
+    });
+  }
+
+  function stopLoadingMessages() {
+    loadingTimers.forEach(clearTimeout);
+    loadingTimers = [];
+    document.getElementById('loading-progress').style.width = '100%';
+  }
+
+  function showLoading(msg) {
+    document.getElementById('loading-msg').textContent = msg || 'Chargement…';
+    document.getElementById('loading-progress').style.width = '0%';
+    document.getElementById('loading').style.display = '';
+  }
+
+  function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = '❌ ' + msg;
+    el.style.display = '';
+  }
+
+  function hideError() {
+    document.getElementById('error').style.display = 'none';
+  }
+
+  // ── Génération du digest ───────────────────────────────
   document.getElementById('btn-run').addEventListener('click', runDigest);
 
   async function runDigest() {
     const btn = document.getElementById('btn-run');
-    const loading = document.getElementById('loading');
-    const errDiv  = document.getElementById('error');
-    const results = document.getElementById('results');
 
-    // Build request body
     const body = { max_emails: parseInt(document.getElementById('max-emails').value, 10) };
-    if (mode === 'single') {
-      body.date = document.getElementById('date-single').value;
-    } else if (mode === 'range') {
-      body.start_date = document.getElementById('date-start').value;
-      body.end_date   = document.getElementById('date-end').value;
-    }
-    // mode === 'yesterday' → no date fields, API defaults to yesterday
+    if (mode === 'single')        body.date       = document.getElementById('date-single').value;
+    else if (mode === 'range') {  body.start_date = document.getElementById('date-start').value;
+                                  body.end_date   = document.getElementById('date-end').value; }
 
-    // UI: loading state
     btn.disabled = true;
-    errDiv.style.display = 'none';
-    results.innerHTML = '';
-    loading.style.display = 'flex';
-    document.getElementById('loading-msg').textContent = 'Connexion à Gmail et analyse en cours…';
+    hideError();
+    clearResults();
+    showLoading();
+    startLoadingMessages();
 
     try {
       const resp = await fetch('/api/digest', {
@@ -398,108 +680,210 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}));
         throw new Error(data.detail || `Erreur HTTP ${resp.status}`);
       }
-
       const digests = await resp.json();
       renderDigests(digests);
+      await loadHistory();
     } catch (err) {
-      errDiv.textContent = '❌ ' + err.message;
-      errDiv.style.display = 'block';
+      showError(err.message);
     } finally {
       btn.disabled = false;
-      loading.style.display = 'none';
+      stopLoadingMessages();
+      hideLoading();
     }
   }
 
-  // ── Render ─────────────────────────────────────────────
-  function stars(n) {
-    return '★'.repeat(n) + '☆'.repeat(5 - n);
+  // ── Rendu des résultats ────────────────────────────────
+  function clearResults() {
+    document.getElementById('articles-list').innerHTML = '';
+    document.getElementById('digest-summary').style.display = 'none';
+    document.getElementById('category-filters').style.display = 'none';
+    document.getElementById('filter-bar').innerHTML = '';
   }
 
   function renderDigests(digests) {
-    const container = document.getElementById('results');
-    container.innerHTML = '';
+    clearResults();
+    if (!digests || digests.length === 0) return;
 
-    digests.forEach(digest => {
-      const section = document.createElement('div');
-      section.className = 'digest-day';
+    // Pour une période : afficher uniquement le premier digest dans la sidebar,
+    // tous les articles dans la liste principale
+    const allArticles = digests.flatMap(d => d.articles || []);
 
-      // Header block
-      const header = document.createElement('div');
-      header.className = 'digest-header';
-      header.innerHTML = `
-        <h2>📰 ${digest.date}</h2>
-        <div class="digest-meta">${digest.nb_emails_analyses} emails analysés · ${digest.nb_articles_retenus} articles retenus</div>
-        <div class="top3">
-          ${digest.top_3_a_retenir.map((t, i) => `
-            <div class="top3-item">
-              <span class="top3-num">${i + 1}</span>
-              <span>${escHtml(t)}</span>
-            </div>`).join('')}
-        </div>
-        <div class="synthesis"><strong>Synthèse :</strong> ${escHtml(digest.synthese_globale)}</div>
-      `;
-      section.appendChild(header);
+    // Afficher le summary du premier (ou seul) digest dans la sidebar
+    const first = digests[0];
+    renderSummary(first, digests.length > 1 ? `${digests.length} jours` : null);
 
-      // Articles
-      if (digest.articles.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'no-articles';
-        empty.textContent = 'Aucun article retenu pour cette date.';
-        section.appendChild(empty);
-      } else {
-        const articlesDiv = document.createElement('div');
-        articlesDiv.className = 'articles';
+    // Filtres catégories
+    buildCategoryFilters(allArticles);
 
-        digest.articles.forEach(a => {
-          const cat = (a.categorie || 'autre').toLowerCase();
-          const card = document.createElement('div');
-          card.className = 'article-card';
-          card.dataset.cat = cat;
-          card.innerHTML = `
-            <div class="article-card-head">
-              <div class="article-title">${escHtml(a.titre)}</div>
-            </div>
-            <div class="article-meta">
-              <span class="badge">${escHtml(a.categorie)}</span>
-              <span class="source">${escHtml(a.source)}</span>
-              <span class="stars">${stars(a.pertinence)}</span>
-            </div>
-            <div class="article-resume">${escHtml(a.resume)}</div>
-            ${safeUrl(a.url) ? `<a class="article-url" href="${escHtml(safeUrl(a.url))}" target="_blank" rel="noopener noreferrer">🔗 Lire l'article</a>` : ''}
-          `;
-          articlesDiv.appendChild(card);
-        });
+    // Articles
+    const list = document.getElementById('articles-list');
+    if (allArticles.length === 0) {
+      list.innerHTML = '<div class="no-articles">Aucun article retenu pour cette période.</div>';
+      return;
+    }
 
-        section.appendChild(articlesDiv);
-      }
-
-      container.appendChild(section);
+    allArticles.forEach(a => {
+      list.appendChild(buildArticleCard(a));
     });
   }
 
+  function renderSummary(digest, periodLabel) {
+    const el = document.getElementById('digest-summary');
+
+    document.getElementById('summary-date').textContent =
+      '📰 ' + (periodLabel ? periodLabel + ' — ' : '') + formatDate(digest.date);
+
+    document.getElementById('summary-meta').textContent =
+      `${digest.nb_emails_analyses} emails analysés · ${digest.nb_articles_retenus} articles retenus`;
+
+    const topEl = document.getElementById('summary-top');
+    topEl.innerHTML = (digest.top_3_a_retenir || []).map((t, i) => `
+      <div class="top-item">
+        <span class="top-num">${i + 1}</span>
+        <span>${escHtml(t)}</span>
+      </div>`).join('');
+
+    document.getElementById('summary-synthesis').textContent = digest.synthese_globale || '';
+
+    el.style.display = '';
+  }
+
+  function buildArticleCard(a) {
+    const cat = (a.categorie || 'autre').toLowerCase();
+    const card = document.createElement('div');
+    card.className = 'article-card';
+    card.dataset.cat = cat;
+    card.innerHTML = `
+      <div class="article-title">${escHtml(a.titre)}</div>
+      <div class="article-meta">
+        <span class="badge">${escHtml(a.categorie)}</span>
+        <span class="source">${escHtml(a.source)}</span>
+        <span class="stars">${stars(a.pertinence)}</span>
+      </div>
+      <div class="article-resume">${escHtml(a.resume)}</div>
+      ${safeUrl(a.url) ? `<a class="article-url" href="${escHtml(safeUrl(a.url))}" target="_blank" rel="noopener noreferrer">🔗 Lire l'article</a>` : ''}
+    `;
+    return card;
+  }
+
+  // ── Filtres par catégorie ──────────────────────────────
+  function buildCategoryFilters(articles) {
+    const cats = [...new Set(articles.map(a => (a.categorie || 'autre').toLowerCase()))];
+    if (cats.length <= 1) return;
+
+    const bar = document.getElementById('filter-bar');
+    bar.innerHTML = '';
+
+    const allPill = document.createElement('button');
+    allPill.className = 'filter-pill active';
+    allPill.dataset.filter = 'all';
+    allPill.textContent = 'Tous';
+    bar.appendChild(allPill);
+
+    cats.forEach(cat => {
+      const pill = document.createElement('button');
+      pill.className = 'filter-pill';
+      pill.dataset.filter = cat;
+      pill.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+      bar.appendChild(pill);
+    });
+
+    bar.querySelectorAll('.filter-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        bar.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const filter = pill.dataset.filter;
+        document.querySelectorAll('.article-card').forEach(card => {
+          card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
+        });
+      });
+    });
+
+    document.getElementById('category-filters').style.display = '';
+  }
+
+  // ── Historique ─────────────────────────────────────────
+  async function loadHistory() {
+    try {
+      const resp = await fetch('/api/digests/history');
+      if (!resp.ok) return;
+      const history = await resp.json();
+
+      const panel = document.getElementById('history-panel');
+      const chips = document.getElementById('history-chips');
+      document.getElementById('history-count').textContent = `${history.length}`;
+
+      if (history.length === 0) { panel.style.display = 'none'; return; }
+
+      panel.style.display = '';
+      chips.innerHTML = history.slice(0, 12).map(h => `
+        <button class="history-chip" data-date="${escHtml(h.date)}">
+          <span>${formatDate(h.date)}</span>
+          <span class="history-chip-meta">${h.nb_articles} articles</span>
+        </button>
+      `).join('');
+
+      chips.querySelectorAll('.history-chip').forEach(chip => {
+        chip.addEventListener('click', () => loadDigestFromHistory(chip.dataset.date, chip));
+      });
+    } catch {}
+  }
+
+  async function loadDigestFromHistory(date, chip) {
+    document.querySelectorAll('.history-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    clearResults();
+    hideError();
+    showLoading('Chargement du digest…');
+
+    try {
+      const resp = await fetch(`/api/digests/${date}`);
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.detail || 'Digest introuvable');
+      }
+      const digests = await resp.json();
+      renderDigests(digests);
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // ── Utilitaires ────────────────────────────────────────
+  function stars(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
   function escHtml(str) {
-    return String(str)
+    return String(str || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
 
-  // Valide qu'une URL est http(s) avant de l'utiliser dans un href
-  // — protège contre les URLs javascript: générées par le LLM
   function safeUrl(url) {
+    if (!url) return null;
     try {
-      const parsed = new URL(url);
-      return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? url : null;
-    } catch {
-      return null;
-    }
+      const p = new URL(url);
+      return (p.protocol === 'https:' || p.protocol === 'http:') ? url : null;
+    } catch { return null; }
   }
+
+  function formatDate(iso) {
+    try {
+      return new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', {
+        weekday: 'short', day: 'numeric', month: 'short'
+      });
+    } catch { return iso; }
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', loadHistory);
 </script>
 
 </body>
